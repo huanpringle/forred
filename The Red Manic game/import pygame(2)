@@ -1,0 +1,94 @@
+import pygame
+import random
+
+pygame.init()
+font = pygame.font.SysFont(None, 36)
+label = font.render("Drunk driver", True, (255, 255, 255))
+window = pygame.display.set_mode((600, 600))
+pygame.display.set_caption("random game")
+
+# Load image once
+
+driver = pygame.image.load('FREAKY.jpg')
+driver = pygame.transform.scale(driver, (80, 80)) 
+
+bot_image = pygame.image.load('bots.jfif')
+bot_image = pygame.transform.scale(bot_image, (50, 50))
+     
+
+
+player = pygame.image.load('FORMULA.jfif')
+player = pygame.transform.scale(player, (50, 50)) 
+
+rect = player.get_rect(center=(50, 50))  # Initial position
+
+bot_width, bot_height = 40, 60
+bots = []
+spawn_delay = 60  # frames between spawns
+frame_count = 0
+
+vel = 5
+scroll_speed = 5
+line_height = 40
+line_gap = 30
+center_line_y = 0
+
+clock = pygame.time.Clock()
+
+
+
+running = True
+while running:
+    clock.tick(60)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Handle movement
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_a]:
+        rect.x -= vel
+    if keys[pygame.K_d]:
+        rect.x += vel
+    
+
+    rect.x = max(200, min(rect.x, 400 - rect.width))
+    rect.y = max(0, min(rect.y, 600 - rect.height))
+
+    frame_count += 1
+
+    center_line_y += scroll_speed
+    if center_line_y >= line_height + line_gap:
+        center_line_y = 0
+
+    if frame_count % spawn_delay == 0:
+        bot_x = random.randint(200, 360)  # random x on road
+        bots.append(pygame.Rect(bot_x, 600, bot_width, bot_height))
+
+    for bot in bots:
+        bot.y -= scroll_speed
+    bots = [bot for bot in bots if bot.y + bot_height > 0]
+    for bot in bots:
+        if rect.colliderect(bot):
+            print("💀 You crashed!")
+            running = False
+
+
+
+   
+    window.fill((0, 0, 255))              
+    pygame.draw.rect(window, (50, 50, 50), (200, 0, 200, 600))
+    for i in range(0, 600 // (line_height + line_gap) + 2):
+            y = i * (line_height + line_gap) - center_line_y
+            pygame.draw.rect(window, (255, 255, 255), (295, y, 10, line_height))  
+
+    for bot in bots:
+        window.blit(bot_image, bot)
+
+    window.blit(driver, (10, 50))
+    window.blit(label, (10, 20)) 
+    window.blit(player, rect)             
+    pygame.display.update()
+
+pygame.quit()
